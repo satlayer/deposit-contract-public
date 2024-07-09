@@ -263,7 +263,7 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setStakable(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external onlyOwner {
+    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external onlyOwner {
         if (_token == address(0)) revert TokenCannotBeZeroAddress();
         if (tokenAllowlist[_token] == _canStake) revert TokenAlreadyConfiguredWithState();
 

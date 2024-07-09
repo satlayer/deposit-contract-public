@@ -153,7 +153,7 @@ interface ISatlayerPool {
     ///@param _token The token to enable or disable for staking
     ///@param _canStake If true, then staking is to be enabled. If false, then staking will be disabled.
     ///@dev Only callable by the owner
-    function setStakable(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external;
+    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external;
 
     ///@notice Add or remove the migrator to/from the blocklist, such that it can no longer be used from migrating tokens from the staking pool
     ///@param _migrator The migrator contract to add or remove from the blocklist
