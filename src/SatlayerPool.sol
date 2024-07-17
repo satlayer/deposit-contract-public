@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.24;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
+
+import {ReceiptToken} from "./ReceiptToken.sol";
 
 import "./interface/IMigrator.sol";
 import "./interface/ISatlayerPool.sol";
@@ -16,9 +17,8 @@ import "./interface/ISatlayerPool.sol";
 
 /// @title Satlayer Pool
 /// @notice A staking pool for liquid restaking token holders which rewards stakers with points from multiple platforms
-contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
-
-    using SafeERC20 for IERC20;
+contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
+    using SafeERC20 for IERC20Metadata;
 
     bytes32 private constant MIGRATE_TYPEHASH =
         keccak256("Migrate(address user,address migratorContract,address destination,address[] tokens,uint256 signatureExpiry,uint256 nonce)");
@@ -34,6 +34,9 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
 
     mapping(address => uint256) public totalAmounts;
 
+    mapping(address => address) public tokenMap;
+    mapping(address => address) public reverseTokenMap;
+
     bool public capsEnabled = true;
     mapping(address => uint256) public caps;
 
@@ -45,15 +48,14 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
     // Next eventId to emit
     uint256 private eventId;
       
-    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, uint256[] memory _individualCaps) Ownable(msg.sender) EIP712("SatlayerPool", "1"){
-        if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _individualCaps.length) revert TokenAndCapLengthMismatch();
+    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, uint256[] memory _individualCaps, string[] memory _names, string[] memory _symbols) Ownable(msg.sender) EIP712("SatlayerPool", "1"){
+        if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _individualCaps.length || _tokensAllowed.length != _names.length || _tokensAllowed.length != _symbols.length) revert TokenAndCapLengthMismatch();
 
         uint256 length = _tokensAllowed.length;
         for(uint256 i; i < length; ++i){
             if (_tokensAllowed[i] == address(0)) revert TokenCannotBeZeroAddress();
-            tokenAllowlist[_tokensAllowed[i]] = true;
-            caps[_tokensAllowed[i]] = _caps[i];
-            individualCaps[_tokensAllowed[i]] = _individualCaps[i];
+            // will revert if there are duplicates in the _tokensAllowed array
+            addToken(_tokensAllowed[i], _caps[i], _individualCaps[i], _names[i], _symbols[i]);
         }
     }
 
@@ -68,15 +70,13 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
         if (_amount == 0) revert DepositAmountCannotBeZero();
         if (_for == address(0)) revert CannotDepositForZeroAddress();
         if (!tokenAllowlist[_token]) revert TokenNotAllowedForStaking();
-        if (capsEnabled && caps[_token] < totalAmounts[_token] + _amount) revert CapReached();
-        if (individualCapsEnabled && individualCaps[_token] != 0 && individualCaps[_token] < balance[_token][_for] + _amount) revert IndividualCapReached();
-
-        balance[_token][_for] += _amount;
-        totalAmounts[_token] += _amount;
+        if (capsEnabled && caps[_token] < getTokenTotalStaked(_token) + _amount) revert CapReached();
+        if (individualCapsEnabled && individualCaps[_token] != 0 && individualCaps[_token] < getUserTokenBalance(_token, _for) + _amount) revert IndividualCapReached();
         
         emit Deposit(++eventId, _for, _token, _amount);
 
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);   
+        ReceiptToken(tokenMap[_token]).mint(_for, _amount);
+        IERC20Metadata(_token).safeTransferFrom(msg.sender, address(this), _amount);   
     }
 
 
@@ -86,12 +86,12 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
      */
     function withdraw(address _token, uint256 _amount) external {
         if (_amount == 0) revert WithdrawAmountCannotBeZero();
+        if (getUserTokenBalance(_token, msg.sender) < _amount) revert InsufficientUserBalance();
 
-        balance[_token][msg.sender] -= _amount; //Will underfow if the staker has insufficient balance
-        totalAmounts[_token] -= _amount;
         emit Withdraw(++eventId, msg.sender, _token, _amount);
 
-        IERC20(_token).safeTransfer(msg.sender, _amount);
+        ReceiptToken(tokenMap[_token]).burn(msg.sender, _amount);
+        IERC20Metadata(_token).safeTransfer(msg.sender, _amount);
     }
 
     /**
@@ -202,7 +202,7 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
 
         //interactions for-loop (external calls)
         for(uint256 i; i < length; ++i){
-            IERC20(_tokens[i]).approve(_migratorContract, _amounts[i]);
+            IERC20Metadata(_tokens[i]).approve(_migratorContract, _amounts[i]);
         }
        
         IMigrator(_migratorContract).migrate(_user, _tokens, _destination, _amounts);
@@ -263,13 +263,26 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external onlyOwner {
+    function addToken(address _token, uint256 _cap, uint256 _individualCap, string memory _name, string memory _symbol) public onlyOwner {
+        if (tokenMap[_token] != address(0)) revert TokenAlreadyAdded();
+
+        ReceiptToken receiptToken = new ReceiptToken(_name, _symbol, IERC20Metadata(_token).decimals());
+
+        tokenMap[_token] = address(receiptToken);
+        reverseTokenMap[address(receiptToken)] = _token;
+
+        setTokenStakingParams(_token, true, _cap, _individualCap);
+    }
+
+    /**
+     * @inheritdoc ISatlayerPool
+     */
+    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) public onlyOwner {
         if (_token == address(0)) revert TokenCannotBeZeroAddress();
         if (tokenAllowlist[_token] == _canStake) revert TokenAlreadyConfiguredWithState();
 
         tokenAllowlist[_token] = _canStake;
 
-        // TODO: make it so caps and individual caps cannot be decreased?
         caps[_token] = _cap;
         individualCaps[_token] = _individualCap;
         
@@ -306,5 +319,17 @@ contract SatlayerPool is ISatlayerPool, Ownable2Step, Pausable, EIP712, Nonces {
         revert CannotRenounceOwnership();
     }
 
-    
+
+    /*//////////////////////////////////////////////////////////////
+                         View Functions
+    //////////////////////////////////////////////////////////////*/
+
+    function getUserTokenBalance(address _token, address _user) public view returns (uint256) {
+        return ReceiptToken(tokenMap[_token]).balanceOf(_user);
+    }
+
+    function getTokenTotalStaked(address _token) public view returns (uint256) {
+        return ReceiptToken(tokenMap[_token]).totalSupply();
+    }
+
 }

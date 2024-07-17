@@ -17,6 +17,7 @@ interface ISatlayerPool {
     error SignatureExpired(); // Thrown when the migration signature has expired
     error TokenCannotBeZeroAddress(); // Thrown when the specified token is the zero address
     error TokenAndCapLengthMismatch(); // Thrown when the length of the token array and the length of the cap array do not match
+    error TokenAlreadyAdded(); //Thrown if the token has already been added (and receipt token created)
     error TokenAlreadyConfiguredWithState(); //Thrown if the token as already been enabled or disabled 
     error DepositAmountCannotBeZero(); // Thrown if staker attempts to call deposit() with zero amount
     error WithdrawAmountCannotBeZero(); //Thrown if staker attempts to call withdraw() with zero amount
@@ -31,6 +32,7 @@ interface ISatlayerPool {
     error TokenArrayCannotBeEmpty(); //Thrown when the provided token address array is empty
     error CapReached(); //Thrown when the cap for a token has been reached
     error IndividualCapReached(); //Thrown when the individual cap for a token has been reached. If individualCapsEnabled is set to false or the individual cap for a token is set to 0, this error will not be thrown
+    error InsufficientUserBalance(); //Thrown when the user does not have enough token balance to withdraw desired amount
 
     /*//////////////////////////////////////////////////////////////
                             Staker Events
@@ -141,7 +143,7 @@ interface ISatlayerPool {
                             Admin Functions
     //////////////////////////////////////////////////////////////*/
 
-
+    function addToken(address _token, uint256 _cap, uint256 _individualCap, string memory _name, string memory _symbol) external;
 
 
     ///@notice Set/Change the required signer for the migration signature (_authorizationSignatureFromSatlayer in the migrate() function)
