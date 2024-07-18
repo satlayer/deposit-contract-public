@@ -14,6 +14,7 @@ import {ReceiptToken} from "./ReceiptToken.sol";
 import "./interface/IMigrator.sol";
 import "./interface/ISatlayerPool.sol";
 
+import "forge-std/console.sol";
 
 /// @title Satlayer Pool
 /// @notice A staking pool for liquid restaking token holders which rewards stakers with points from multiple platforms
@@ -271,6 +272,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
         tokenMap[_token] = address(receiptToken);
         reverseTokenMap[address(receiptToken)] = _token;
 
+        console.log("original token %s receipt token %s", _token, address(receiptToken));
         setTokenStakingParams(_token, true, _cap, _individualCap);
     }
 

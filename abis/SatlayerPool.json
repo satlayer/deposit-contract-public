@@ -16,14 +16,50 @@
         "name": "_individualCaps",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "_names",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "_symbols",
+        "type": "string[]",
+        "internalType": "string[]"
       }
     ],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "acceptOwnership",
-    "inputs": [],
+    "name": "addToken",
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_cap",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_individualCap",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_symbol",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -163,6 +199,49 @@
         "name": "extensions",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTokenTotalStaked",
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserTokenBalance",
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -343,8 +422,21 @@
   },
   {
     "type": "function",
-    "name": "pendingOwner",
+    "name": "renounceOwnership",
     "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "reverseTokenMap",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -353,13 +445,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -479,6 +564,25 @@
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tokenMap",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -635,25 +739,6 @@
         "type": "uint256[]",
         "indexed": false,
         "internalType": "uint256[]"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "OwnershipTransferStarted",
-    "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -835,6 +920,11 @@
   },
   {
     "type": "error",
+    "name": "InsufficientUserBalance",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidAccountNonce",
     "inputs": [
       {
@@ -932,6 +1022,11 @@
         "internalType": "string"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "TokenAlreadyAdded",
+    "inputs": []
   },
   {
     "type": "error",
