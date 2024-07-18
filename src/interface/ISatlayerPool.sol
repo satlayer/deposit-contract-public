@@ -31,7 +31,6 @@ interface ISatlayerPool {
     error DuplicateToken(); //Thrown when there is a duplicate in the provided token address array
     error TokenArrayCannotBeEmpty(); //Thrown when the provided token address array is empty
     error CapReached(); //Thrown when the cap for a token has been reached
-    error IndividualCapReached(); //Thrown when the individual cap for a token has been reached. If individualCapsEnabled is set to false or the individual cap for a token is set to 0, this error will not be thrown
     error InsufficientUserBalance(); //Thrown when the user does not have enough token balance to withdraw desired amount
 
     /*//////////////////////////////////////////////////////////////
@@ -143,7 +142,7 @@ interface ISatlayerPool {
                             Admin Functions
     //////////////////////////////////////////////////////////////*/
 
-    function addToken(address _token, uint256 _cap, uint256 _individualCap, string memory _name, string memory _symbol) external;
+    function addToken(address _token, uint256 _cap, string memory _name, string memory _symbol) external;
 
 
     ///@notice Set/Change the required signer for the migration signature (_authorizationSignatureFromSatlayer in the migrate() function)
@@ -155,7 +154,7 @@ interface ISatlayerPool {
     ///@param _token The token to enable or disable for staking
     ///@param _canStake If true, then staking is to be enabled. If false, then staking will be disabled.
     ///@dev Only callable by the owner
-    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) external;
+    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap) external;
 
     ///@notice Add or remove the migrator to/from the blocklist, such that it can no longer be used from migrating tokens from the staking pool
     ///@param _migrator The migrator contract to add or remove from the blocklist
@@ -173,7 +172,6 @@ interface ISatlayerPool {
 
     function setCap(address _token, uint256 _cap) external;
     function setCapsEnabled(bool _enabled) external;
-    function setIndividualCap(address _token, uint256 _individualCap) external;
-    function setIndividualCapsEnabled(bool _enabled) external;
+
 
 }

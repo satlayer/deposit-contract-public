@@ -41,22 +41,19 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     bool public capsEnabled = true;
     mapping(address => uint256) public caps;
 
-    bool public individualCapsEnabled = false;
-    mapping(address => uint256) public individualCaps;
-
     address satlayerSigner;
 
     // Next eventId to emit
     uint256 private eventId;
       
-    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, uint256[] memory _individualCaps, string[] memory _names, string[] memory _symbols) Ownable(msg.sender) EIP712("SatlayerPool", "1"){
-        if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _individualCaps.length || _tokensAllowed.length != _names.length || _tokensAllowed.length != _symbols.length) revert TokenAndCapLengthMismatch();
+    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, string[] memory _names, string[] memory _symbols) Ownable(msg.sender) EIP712("SatlayerPool", "1"){
+        if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _names.length || _tokensAllowed.length != _symbols.length) revert TokenAndCapLengthMismatch();
 
         uint256 length = _tokensAllowed.length;
         for(uint256 i; i < length; ++i){
             if (_tokensAllowed[i] == address(0)) revert TokenCannotBeZeroAddress();
             // will revert if there are duplicates in the _tokensAllowed array
-            addToken(_tokensAllowed[i], _caps[i], _individualCaps[i], _names[i], _symbols[i]);
+            addToken(_tokensAllowed[i], _caps[i], _names[i], _symbols[i]);
         }
     }
 
@@ -72,7 +69,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
         if (_for == address(0)) revert CannotDepositForZeroAddress();
         if (!tokenAllowlist[_token]) revert TokenNotAllowedForStaking();
         if (capsEnabled && caps[_token] < getTokenTotalStaked(_token) + _amount) revert CapReached();
-        if (individualCapsEnabled && individualCaps[_token] != 0 && individualCaps[_token] < getUserTokenBalance(_token, _for) + _amount) revert IndividualCapReached();
         
         emit Deposit(++eventId, _for, _token, _amount);
 
@@ -237,22 +233,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setIndividualCap(address _token, uint256 _individualCap) external onlyOwner {
-        // TODO: do we want to restrict it so the cap can never be decreased
-        individualCaps[_token] = _individualCap;
-    }
-
-
-    /**
-     * @inheritdoc ISatlayerPool
-     */
-    function setIndividualCapsEnabled(bool _enabled) external onlyOwner {
-        individualCapsEnabled = _enabled;
-    }
-
-    /**
-     * @inheritdoc ISatlayerPool
-     */
     function setSatlayerSigner(address _signer) external onlyOwner {
         if (_signer == address(0)) revert SignerCannotBeZeroAddress();
         if (_signer == satlayerSigner) revert SignerAlreadySetToAddress();
@@ -264,7 +244,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function addToken(address _token, uint256 _cap, uint256 _individualCap, string memory _name, string memory _symbol) public onlyOwner {
+    function addToken(address _token, uint256 _cap, string memory _name, string memory _symbol) public onlyOwner {
         if (tokenMap[_token] != address(0)) revert TokenAlreadyAdded();
 
         ReceiptToken receiptToken = new ReceiptToken(_name, _symbol, IERC20Metadata(_token).decimals());
@@ -273,20 +253,19 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
         reverseTokenMap[address(receiptToken)] = _token;
 
         console.log("original token %s receipt token %s", _token, address(receiptToken));
-        setTokenStakingParams(_token, true, _cap, _individualCap);
+        setTokenStakingParams(_token, true, _cap);
     }
 
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap, uint256 _individualCap) public onlyOwner {
+    function setTokenStakingParams(address _token, bool _canStake, uint256 _cap) public onlyOwner {
         if (_token == address(0)) revert TokenCannotBeZeroAddress();
         if (tokenAllowlist[_token] == _canStake) revert TokenAlreadyConfiguredWithState();
 
         tokenAllowlist[_token] = _canStake;
 
         caps[_token] = _cap;
-        individualCaps[_token] = _individualCap;
         
         emit TokenStakabilityChanged(_token, _canStake);
     }
