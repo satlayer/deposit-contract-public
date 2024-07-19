@@ -6,6 +6,8 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./interface/IReceiptToken.sol";
 
+/// @title Receipt token
+/// @notice A mintable/burnable ERC20 token given to user as a receipt after staking assets in the Satlayer pool
 contract ReceiptToken is IReceiptToken, Ownable, ERC20 {
 
     uint8 private _decimals;
@@ -18,10 +20,16 @@ contract ReceiptToken is IReceiptToken, Ownable, ERC20 {
         return _decimals;
     }
 
+    /**
+     * @inheritdoc IReceiptToken
+     */
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
 
+    /**
+     * @inheritdoc IReceiptToken
+     */
     function burn(address from, uint256 amount) external onlyOwner {
         // reverts with ERC20InsufficientBalance in _update if user's balance is less than amount
         _burn(from, amount);

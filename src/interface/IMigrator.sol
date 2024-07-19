@@ -7,8 +7,8 @@ pragma solidity 0.8.24;
 interface IMigrator {
     
     ///@notice Function called by the Satlayer Pool to facilitate migration of staked tokens from the Satlayer Pool to Satlayer Migrator Contract
-    ///@param _user The address of the user whose staked funds are being migrated to Satlayer
-    ///@param _destinationAddress The address which the tokens should be credited to on Satlayer mainnet encoded in bech32 format
+    ///@param _user The address of the user whose staked funds are being migrated to Satlayer mainnet
+    ///@param _destinationAddress The bech32 encoded address which the tokens should be credited to on Satlayer mainnet encoded in bech32 format
     ///@param _tokens The tokens being migrated to Satlayer migrator contract from the Satlayer staking pool 
     ///@param _amounts The amounts of each token to be migrated to Satlayer for the _user
     function migrate(

@@ -4,35 +4,24 @@ pragma solidity 0.8.24;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 import {ReceiptToken} from "./ReceiptToken.sol";
 
 import "./interface/IMigrator.sol";
 import "./interface/ISatlayerPool.sol";
 
-import "forge-std/console.sol";
 
 /// @title Satlayer Pool
 /// @notice A staking pool for liquid restaking token holders which rewards stakers with points from multiple platforms
-contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
+contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
     using SafeERC20 for IERC20Metadata;
 
     bytes32 private constant MIGRATE_TYPEHASH =
         keccak256("Migrate(address user,address migratorContract,address destination,address[] tokens,uint256 signatureExpiry,uint256 nonce)");
     
-    // (tokenAddress => isAllowedForStaking)
+    // (tokenAddress => stakingAllowed)
     mapping(address => bool) public tokenAllowlist;
-
-    // (tokenAddress => stakerAddress => stakedAmount)
-    mapping(address => mapping(address => uint256)) public balance;
-
-    
-
-    mapping(address => uint256) public totalAmounts;
 
     mapping(address => address) public tokenMap;
     mapping(address => address) public reverseTokenMap;
@@ -45,7 +34,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     // Next eventId to emit
     uint256 private eventId;
       
-    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, string[] memory _names, string[] memory _symbols) Ownable(msg.sender) EIP712("SatlayerPool", "1"){
+    constructor(address[] memory _tokensAllowed, uint256[] memory _caps, string[] memory _names, string[] memory _symbols) Ownable(msg.sender) {
         if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _names.length || _tokensAllowed.length != _symbols.length) revert TokenAndCapLengthMismatch();
 
         uint256 length = _tokensAllowed.length;
@@ -121,7 +110,8 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
             ReceiptToken(tokenMap[_tokens[i]]).burn(msg.sender, _amounts[i]);
 
         }
-
+        
+        emit Migrate(++eventId, msg.sender, destinationAddress, migrator, _tokens, _amounts);
         // migrator will transfer tokens out of staking contract and then migrate them over to SatLayer mainnet
         IMigrator(migrator).migrate(msg.sender, destinationAddress, _tokens, _amounts);
     }
@@ -170,7 +160,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
         tokenMap[_token] = address(receiptToken);
         reverseTokenMap[address(receiptToken)] = _token;
 
-        console.log("original token %s receipt token %s", _token, address(receiptToken));
         setTokenStakingParams(_token, true, _cap);
     }
 

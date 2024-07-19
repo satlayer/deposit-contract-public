@@ -4,17 +4,13 @@ pragma solidity 0.8.24;
 
 /// @title Satlayer Pool Interface
 /// @notice An interface containing externally accessible functions of the SatlayerPool contract
-/// @dev The automatically generated public view functions for the state variables and mappings are not included in the interface
 interface ISatlayerPool {
 
     /*//////////////////////////////////////////////////////////////
                             Errors
     //////////////////////////////////////////////////////////////*/
 
-    error SignerCannotBeZeroAddress(); //Thrown when proposed signer is the zero address
-    error SignerAlreadySetToAddress(); //Thrown when proposed signer is already set
-    error SignatureInvalid(); // Thrown when the migration signature is invalid
-    error SignatureExpired(); // Thrown when the migration signature has expired
+
     error TokenCannotBeZeroAddress(); // Thrown when the specified token is the zero address
     error TokenAndCapLengthMismatch(); // Thrown when the length of the token array and the length of the cap array do not match
     error TokenAlreadyAdded(); //Thrown if the token has already been added (and receipt token created)
@@ -24,7 +20,6 @@ interface ISatlayerPool {
     error TokenNotAllowedForStaking(); // Thrown if staker attempts to stake unsupported token (or token disabled for staking)
     error UserDoesNotHaveStake(); //Thrown if the staker is attempting to migrate with no stake
     error MigratorCannotBeZeroAddress(); //Thrown if the provided migrator is the zero address
-    error MigratorAlreadyAllowedOrBlocked(); //Thrown if attempting to block a migrator which has already been blocked or attempting to allow a migrator which is already allowed
     error MigratorNotSet(); //Thrown if the migrator contract is not set
     error CannotDepositForZeroAddress(); //Thrown if caller tries to deposit on behalf of the zero address
     error CannotRenounceOwnership(); //Thrown if the renounceOwnership() function is called
@@ -59,16 +54,16 @@ interface ISatlayerPool {
     ///@notice Emitted when a staker migrates their tokens from the SatlayerPool to Satlayer.
     ///@param eventId The unique event Id associated with the Migrate event
     ///@param user The address of the staker migrating funds to Satlayer
-    ///@param tokens The addresses of the tokens being being migrated from the SatlayerPool to Satlayer
-    ///@param destination The address which the tokens will be transferred to on Satlayer
+    ///@param destinationAddress The bech2 encoded address which the tokens will be credited to on Satlayer mainnet
     ///@param migrator The address of the migrator contract which initially receives the migrated tokens
+    ///@param tokens The addresses of the tokens being being migrated from the SatlayerPool to Satlayer
     ///@param amounts The amounts of each token migrated to Satlayer
     event Migrate(
         uint256 indexed eventId, 
         address indexed user, 
-        address[] tokens, 
-        address destination, 
+        string destinationAddress, 
         address migrator, 
+        address[] tokens, 
         uint256[] amounts
     );
 
@@ -87,10 +82,17 @@ interface ISatlayerPool {
     ///@param blocked Is true if the migrator was added to the blocklist, and false if it was removed from the blocklist
     event BlocklistChanged(address migrator, bool blocked);
 
+    ///@notice Emitted when the cap for a token is changed
+    ///@param token address of token whose cap is modified
+    ///@param cap new staking cap
     event CapChanged(address token, uint256 cap);
 
+    ///@notice Emitted when staking caps are globally enabled or disabled
+    ///@param enabled whether or not staking caps are enabled
     event CapsEnabled(bool enabled);
 
+    ///@notice Emitted when the migrator contract address is changed
+    ///@param migrator address of the migrator contract
     event MigratorChanged(address migrator);
     
     /*//////////////////////////////////////////////////////////////
@@ -112,6 +114,7 @@ interface ISatlayerPool {
     ///@dev called by the staker
     ///@param _tokens The tokens to migrate to Satlayer from the Satlayer Pool
     ///@param destinationAddress The bech32 encoded address on Satlayer mainnet which the user wishes to migrate their tokens to
+    ///@dev can't be called if contract is paused
     function migrate(
         address[] calldata  _tokens, 
         string calldata destinationAddress 
@@ -122,8 +125,15 @@ interface ISatlayerPool {
                             Admin Functions
     //////////////////////////////////////////////////////////////*/
 
+    ///@notice Add a token to the Satlayer pool for staking and configure the receipt token parameters
+    ///@param _token token to be added as staking collateral
+    ///@param _cap max amount of token which can be staked
+    ///@dev only callable by the owner
     function addToken(address _token, uint256 _cap, string memory _name, string memory _symbol) external;
 
+    ///@notice Set the address of the migrator contract
+    ///@param _migrator migrator contract address
+    ///@dev only callable by the owner
     function setMigrator(address _migrator) external;
 
     ///@notice Enable or disable the specified token for staking
@@ -133,14 +143,22 @@ interface ISatlayerPool {
     function setTokenStakingParams(address _token, bool _canStake, uint256 _cap) external;
 
     ///@notice Pause further staking through the deposit function.
-    ///@dev Only callable by the owner. Withdrawals and migrations will still be possible when paused
+    ///@dev Only callable by the owner. Withdrawals will still be possible when paused
     function pause() external;
 
     ///@notice Unpause staking allowing the deposit function to be used again
     ///@dev Only callable by the owner
     function unpause() external;
 
+    ///@notice Set the max amount stakeable for a particular token
+    ///@param _token token whose cap is being set
+    ///@param _cap desired max stakeable amount
+    ///@dev Only callable by Owner
     function setCap(address _token, uint256 _cap) external;
+
+    ///@notice Set whether or not max staking caps are enabled in the app
+    ///@param _enabled whether or not caps are enabled
+    ///@dev Only callable by Owner
     function setCapsEnabled(bool _enabled) external;
 
 
