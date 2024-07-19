@@ -14,6 +14,7 @@ interface ISatlayerPool {
     error TokenCannotBeZeroAddress(); // Thrown when the specified token is the zero address
     error TokenAndCapLengthMismatch(); // Thrown when the length of the token array and the length of the cap array do not match
     error TokenAlreadyAdded(); //Thrown if the token has already been added (and receipt token created)
+    error TokenNotAdded(); //Thrown if queried token has not been added to the Satlayer Pool
     error TokenAlreadyConfiguredWithState(); //Thrown if the token as already been enabled or disabled 
     error DepositAmountCannotBeZero(); // Thrown if staker attempts to call deposit() with zero amount
     error WithdrawAmountCannotBeZero(); //Thrown if staker attempts to call withdraw() with zero amount
@@ -162,4 +163,19 @@ interface ISatlayerPool {
     function setCapsEnabled(bool _enabled) external;
 
 
+
+    /*//////////////////////////////////////////////////////////////
+                         View Functions
+    //////////////////////////////////////////////////////////////*/
+
+    ///@notice returns the user's staked balance of a particular token by reading the wallet balance of the corresponding receipt token
+    ///@param _token deposit token address
+    ///@param _user address of user to query
+    ///@return _balance the user's balance of the receipt token corresponding to staked token
+    function getUserTokenBalance(address _token, address _user) external view returns (uint256);
+
+    ///@notice returns the total amount staked of a particular token in Satlayer pool
+    ///@param _token deposit token address
+    ///@return _total the total amount staked of the specified _token
+    function getTokenTotalStaked(address _token) external view returns (uint256);
 }

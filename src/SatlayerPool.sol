@@ -158,7 +158,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         ReceiptToken receiptToken = new ReceiptToken(_name, _symbol, IERC20Metadata(_token).decimals());
 
         tokenMap[_token] = address(receiptToken);
-        reverseTokenMap[address(receiptToken)] = _token;
 
         setTokenStakingParams(_token, true, _cap);
     }
@@ -201,11 +200,21 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
                          View Functions
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @inheritdoc ISatlayerPool
+     */
     function getUserTokenBalance(address _token, address _user) public view returns (uint256) {
+        if (tokenMap[_token] == address(0)) revert TokenNotAdded();
+
         return ReceiptToken(tokenMap[_token]).balanceOf(_user);
     }
 
+    /**
+     * @inheritdoc ISatlayerPool
+     */
     function getTokenTotalStaked(address _token) public view returns (uint256) {
+        if (tokenMap[_token] == address(0)) revert TokenNotAdded();
+
         return ReceiptToken(tokenMap[_token]).totalSupply();
     }
 
