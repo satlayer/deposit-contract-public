@@ -30,8 +30,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     // (tokenAddress => stakerAddress => stakedAmount)
     mapping(address => mapping(address => uint256)) public balance;
 
-    // (migratorContract => isBlocklisted)
-    mapping(address => bool) public migratorBlocklist;
+    
 
     mapping(address => uint256) public totalAmounts;
 
@@ -41,7 +40,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     bool public capsEnabled = true;
     mapping(address => uint256) public caps;
 
-    address satlayerSigner;
+    address public migrator;
 
     // Next eventId to emit
     uint256 private eventId;
@@ -87,6 +86,8 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
 
         emit Withdraw(++eventId, msg.sender, _token, _amount);
 
+        // reverts with InsufficientUserBalance if the user does not have enough receipt tokens to
+        // burn _amount
         ReceiptToken(tokenMap[_token]).burn(msg.sender, _amount);
         IERC20Metadata(_token).safeTransfer(msg.sender, _amount);
     }
@@ -94,119 +95,36 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function migrateWithSig(
-        address _user,
-        address[] calldata _tokens, 
-        address _migratorContract, 
-        address _destination, 
-        uint256 _signatureExpiry, 
-        bytes memory _stakerSignature
-    ) onlyOwner external{
-        {
-            bytes32 structHash = keccak256(abi.encode(
-                MIGRATE_TYPEHASH, 
-                _user, 
-                _migratorContract,
-                _destination, 
-                //The array values are encoded as the keccak256 hash of the concatenated encodeData of their contents 
-                //Ref: https://eips.ethereum.org/EIPS/eip-712#definition-of-encodedata
-                keccak256(abi.encodePacked(_tokens)),
-                _signatureExpiry, 
-                _useNonce(_user)
-            ));
-            bytes32 constructedHash = _hashTypedDataV4(structHash);
-
-            if (!SignatureChecker.isValidSignatureNow(_user, constructedHash, _stakerSignature)){
-                revert SignatureInvalid();
-            }
-        }
-
-        uint256[] memory _amounts = _migrateChecks(_user, _tokens, _signatureExpiry, _migratorContract);
-        _migrate(_user, _destination, _migratorContract, _tokens, _amounts);
-
-    }
-
-    /**
-     * @inheritdoc ISatlayerPool
-     */
     function migrate(
         address[] calldata  _tokens, 
-        address _migratorContract, 
-        address _destination, 
-        uint256 _signatureExpiry, 
-        bytes calldata _authorizationSignatureFromSatlayer
-    ) external { 
-        uint256[] memory _amounts = _migrateChecks(msg.sender, _tokens, _signatureExpiry, _migratorContract);
+        string calldata destinationAddress 
+    ) external whenNotPaused { 
+        // checks
+        if (migrator == address(0)) revert MigratorNotSet();
 
-        bytes32 constructedHash = keccak256(
-                abi.encodePacked(
-                    '\x19Ethereum Signed Message:\n32',
-                    keccak256(
-                        abi.encodePacked(
-                            _migratorContract,
-                            _signatureExpiry,
-                            address(this),
-                            block.chainid
-                        )
-                    )
-                )
-            );
-
-        // verify that the migrator’s address is signed in the authorization signature by the correct signer (SatlayerSigner)
-        if (!SignatureChecker.isValidSignatureNow(satlayerSigner, constructedHash, _authorizationSignatureFromSatlayer)){
-            revert SignatureInvalid();
-        }
-        
-        _migrate(msg.sender, _destination, _migratorContract, _tokens, _amounts);
-    }
-
-    function _migrateChecks(address _user, address[] calldata  _tokens, uint256 _signatureExpiry, address _migratorContract) 
-        internal view returns (uint256[] memory _amounts){
-        
         uint256 length = _tokens.length;
         if (length == 0) revert TokenArrayCannotBeEmpty();
 
-        _amounts = new uint256[](length);
-
+        uint256[] memory _amounts = new uint256[](length);
         for(uint256 i; i < length; ++i){
-            _amounts[i] = balance[_tokens[i]][_user];
+            _amounts[i] = getUserTokenBalance(_tokens[i], msg.sender);
             if (_amounts[i] == 0) revert UserDoesNotHaveStake();
         }
 
-        if (block.timestamp >= _signatureExpiry) revert SignatureExpired();// allows us to invalidate signature by having it expired
-
-        if (migratorBlocklist[_migratorContract]) revert MigratorBlocked();
-    }
-
-    function _migrate(
-        address _user, 
-        address _destination, 
-        address _migratorContract,
-        address[] calldata  _tokens, 
-        uint256[] memory _amounts) 
-        internal {
-        
-        uint256 length = _tokens.length;
-       //effects for-loop (state changes)
+        // loop through array again and approve migrator, burn receipt token
         for(uint256 i; i < length; ++i){
-            //if the balance has been already set to zero, then _tokens[i] is a duplicate of a previous token in the array
-            if (balance[_tokens[i]][_user] == 0) revert DuplicateToken();
 
-            balance[_tokens[i]][_user] = 0;
+            //if the receipt token balance is already set to zero, then token is a duplicate previous token in the array
+            if (getUserTokenBalance(_tokens[i], msg.sender) == 0) revert DuplicateToken();
+
+            IERC20Metadata(_tokens[i]).approve(migrator, _amounts[i]);
+            ReceiptToken(tokenMap[_tokens[i]]).burn(msg.sender, _amounts[i]);
+
         }
 
-        emit Migrate (++eventId, _user, _tokens, _destination, _migratorContract, _amounts);
-
-        //interactions for-loop (external calls)
-        for(uint256 i; i < length; ++i){
-            IERC20Metadata(_tokens[i]).approve(_migratorContract, _amounts[i]);
-        }
-       
-        IMigrator(_migratorContract).migrate(_user, _tokens, _destination, _amounts);
-
+        // migrator will transfer tokens out of staking contract and then migrate them over to SatLayer mainnet
+        IMigrator(migrator).migrate(msg.sender, destinationAddress, _tokens, _amounts);
     }
-    
-
 
 
     /*//////////////////////////////////////////////////////////////
@@ -218,7 +136,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
      * @inheritdoc ISatlayerPool
      */
     function setCap(address _token, uint256 _cap) external onlyOwner {
-        // TODO: do we want to restrict it so the cap can never be decreased
+        emit CapChanged(_token, _cap);
         caps[_token] = _cap;
     }
 
@@ -227,18 +145,18 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
      * @inheritdoc ISatlayerPool
      */
     function setCapsEnabled(bool _enabled) external onlyOwner {
+        emit CapsEnabled(_enabled);
         capsEnabled = _enabled;
     }
 
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setSatlayerSigner(address _signer) external onlyOwner {
-        if (_signer == address(0)) revert SignerCannotBeZeroAddress();
-        if (_signer == satlayerSigner) revert SignerAlreadySetToAddress();
+    function setMigrator(address _migrator) external onlyOwner {
+        if (_migrator == address(0)) revert MigratorCannotBeZeroAddress();
 
-        satlayerSigner = _signer;
-        emit SignerChanged(_signer);
+        emit MigratorChanged(_migrator);
+        migrator = _migrator;
     }
 
     /**
@@ -268,17 +186,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable, EIP712, Nonces {
         caps[_token] = _cap;
         
         emit TokenStakabilityChanged(_token, _canStake);
-    }
-
-    /**
-     * @inheritdoc ISatlayerPool
-     */
-    function blockMigrator(address _migrator, bool _blocklisted) external onlyOwner {
-        if (_migrator == address(0)) revert MigratorCannotBeZeroAddress();
-        if (migratorBlocklist[_migrator] == _blocklisted) revert MigratorAlreadyAllowedOrBlocked();
-
-        migratorBlocklist[_migrator] = _blocklisted;
-        emit BlocklistChanged(_migrator, _blocklisted);
     }
 
     /**

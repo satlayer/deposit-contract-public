@@ -25,7 +25,7 @@ interface ISatlayerPool {
     error UserDoesNotHaveStake(); //Thrown if the staker is attempting to migrate with no stake
     error MigratorCannotBeZeroAddress(); //Thrown if the provided migrator is the zero address
     error MigratorAlreadyAllowedOrBlocked(); //Thrown if attempting to block a migrator which has already been blocked or attempting to allow a migrator which is already allowed
-    error MigratorBlocked(); //Thrown if the provided migrator contract has been blacklisted.
+    error MigratorNotSet(); //Thrown if the migrator contract is not set
     error CannotDepositForZeroAddress(); //Thrown if caller tries to deposit on behalf of the zero address
     error CannotRenounceOwnership(); //Thrown if the renounceOwnership() function is called
     error DuplicateToken(); //Thrown when there is a duplicate in the provided token address array
@@ -76,9 +76,6 @@ interface ISatlayerPool {
                             Admin Events
     //////////////////////////////////////////////////////////////*/
 
-    ///@notice Emitted when the required signer for the migration signature is changed
-    ///@param newSigner The address of the new signer which must sign the migration signature
-    event SignerChanged(address newSigner);
 
     ///@notice Emitted when a token has been enabled or disabled for staking
     ///@param token The address of the token which has been enabled/disabled for staking
@@ -89,6 +86,12 @@ interface ISatlayerPool {
     ///@param migrator The address of the migrator which has been added or removed from the blocklist 
     ///@param blocked Is true if the migrator was added to the blocklist, and false if it was removed from the blocklist
     event BlocklistChanged(address migrator, bool blocked);
+
+    event CapChanged(address token, uint256 cap);
+
+    event CapsEnabled(bool enabled);
+
+    event MigratorChanged(address migrator);
     
     /*//////////////////////////////////////////////////////////////
                             Staker Functions
@@ -105,36 +108,13 @@ interface ISatlayerPool {
     ///@param _amount The amount of token to withdraw from the Satlayer Pool
     function withdraw(address _token, uint256 _amount) external;
 
-    ///@notice Migrate the staked tokens for the caller from the Satlayer Pool to Satlayer
+    ///@notice Migrate the staked tokens for the caller from the Satlayer Pool to Satlayer mainnet
     ///@dev called by the staker
     ///@param _tokens The tokens to migrate to Satlayer from the Satlayer Pool
-    ///@param _migratorContract The migrator contract which will initially receive the migrated tokens before moving them to Satlayer
-    ///@param _destination The address which will receive the migrated tokens on Satlayer
-    ///@param _signatureExpiry The timestamp at which the signature in _authorizationSignatureFromSatlayer expires
-    ///@param _authorizationSignatureFromSatlayer The authorization signature which is signed by the Satlayer signer and indicates the correct migrator contract
+    ///@param destinationAddress The bech32 encoded address on Satlayer mainnet which the user wishes to migrate their tokens to
     function migrate(
-        address[] calldata _tokens, 
-        address _migratorContract, 
-        address _destination, 
-        uint256 _signatureExpiry, 
-        bytes memory _authorizationSignatureFromSatlayer
-    ) external;
-
-
-    ///@notice Migrate the staked tokens for the caller from the Satlayer Pool to Satlayer
-    ///@param _user The staker to migrate tokens for
-    ///@param _tokens The tokens to migrate to Satlayer from the Satlayer Pool
-    ///@param _migratorContract The migrator contract which will initially receive the migrated tokens before moving them to Satlayer
-    ///@param _destination The address which will receive the migrated tokens on Satlayer
-    ///@param _signatureExpiry The timestamp at which the signature in _authorizationSignatureFromSatlayer expires
-    ///@param _stakerSignature The signature from the staker authorizing the migration of their tokens
-    function migrateWithSig(
-        address _user,
-        address[] calldata _tokens, 
-        address _migratorContract, 
-        address _destination, 
-        uint256 _signatureExpiry, 
-        bytes memory _stakerSignature
+        address[] calldata  _tokens, 
+        string calldata destinationAddress 
     ) external;
 
 
@@ -144,23 +124,13 @@ interface ISatlayerPool {
 
     function addToken(address _token, uint256 _cap, string memory _name, string memory _symbol) external;
 
-
-    ///@notice Set/Change the required signer for the migration signature (_authorizationSignatureFromSatlayer in the migrate() function)
-    ///@param _signer The address of the new signer for the migration signature
-    ///@dev Only callable by the owner
-    function setSatlayerSigner(address _signer) external;
+    function setMigrator(address _migrator) external;
 
     ///@notice Enable or disable the specified token for staking
     ///@param _token The token to enable or disable for staking
     ///@param _canStake If true, then staking is to be enabled. If false, then staking will be disabled.
     ///@dev Only callable by the owner
     function setTokenStakingParams(address _token, bool _canStake, uint256 _cap) external;
-
-    ///@notice Add or remove the migrator to/from the blocklist, such that it can no longer be used from migrating tokens from the staking pool
-    ///@param _migrator The migrator contract to add or remove from the blocklist
-    ///@param _blocklisted If true, then add the migrator to the blocklist. If false, then remove the migrator from the blocklist.
-    ///@dev Only callable by the owner
-    function blockMigrator(address _migrator, bool _blocklisted) external;
 
     ///@notice Pause further staking through the deposit function.
     ///@dev Only callable by the owner. Withdrawals and migrations will still be possible when paused
