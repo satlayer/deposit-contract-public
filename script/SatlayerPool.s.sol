@@ -25,11 +25,6 @@ contract DeploySatlayerPoolSepolia is Script {
         caps[1] = 200 * DECIMALS;
         caps[2] = 4200 * DECIMALS;
 
-        uint256[] memory individualCaps = new uint256[](3);
-        individualCaps[0] = uint256(0x0);
-        individualCaps[1] = uint256(0x0);
-        individualCaps[2] = uint256(0x0);
-
         string[] memory names = new string[](3);
         names[0] = "SatLayer USDC";
         names[1] = "Satlayer WBTC";
@@ -40,7 +35,7 @@ contract DeploySatlayerPoolSepolia is Script {
         symbols[1] = "satWBTC";
         symbols[2] = "satWFIL";      
 
-        SatlayerPool pool = new SatlayerPool(tokensAllowed, caps, individualCaps, names, symbols);
+        SatlayerPool pool = new SatlayerPool(tokensAllowed, caps, names, symbols);
         
         console.log("SatlayerPool deployed to:", address(pool));
         vm.stopBroadcast();
