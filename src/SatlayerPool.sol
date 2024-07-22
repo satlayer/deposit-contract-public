@@ -16,15 +16,11 @@ import "./interface/ISatlayerPool.sol";
 /// @notice A staking pool for liquid restaking token holders which rewards stakers with points from multiple platforms
 contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
     using SafeERC20 for IERC20Metadata;
-
-    bytes32 private constant MIGRATE_TYPEHASH =
-        keccak256("Migrate(address user,address migratorContract,address destination,address[] tokens,uint256 signatureExpiry,uint256 nonce)");
     
     // (tokenAddress => stakingAllowed)
     mapping(address => bool) public tokenAllowlist;
 
     mapping(address => address) public tokenMap;
-    mapping(address => address) public reverseTokenMap;
 
     bool public capsEnabled = true;
     mapping(address => uint256) public caps;
@@ -190,6 +186,12 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         _unpause();
     }
 
+    function recoverERC20(address tokenAddress, address tokenReceiver, uint256 tokenAmount) external onlyOwner {
+        if (tokenMap[tokenAddress] != address(0)) revert TokenAlreadyAdded();
+
+        IERC20Metadata(tokenAddress).safeTransfer(tokenReceiver, tokenAmount);
+    
+    }
 
     function renounceOwnership() public override{
         revert CannotRenounceOwnership();

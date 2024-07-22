@@ -162,6 +162,13 @@ interface ISatlayerPool {
     ///@dev Only callable by Owner
     function setCapsEnabled(bool _enabled) external;
 
+    ///@notice allows the contract owner to send erc20 tokens deposited to this wallet to a specified external address as long as they haven't been configured as staking collateral
+    ///@param tokenAddress address of token to recover
+    ///@param tokenReceiver address to send tokens to
+    ///@param tokenAmount amount to send
+    ///@dev only callable by owner
+    function recoverERC20(address tokenAddress, address tokenReceiver, uint256 tokenAmount) external;
+
 
 
     /*//////////////////////////////////////////////////////////////
