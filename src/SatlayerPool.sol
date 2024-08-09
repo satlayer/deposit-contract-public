@@ -117,6 +117,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
      * @inheritdoc ISatlayerPool
      */
     function setCapsEnabled(bool _enabled) external onlyOwner {
+        if (capsEnabled == _enabled) revert ParamsUnchanged();
         emit CapsEnabled(_enabled);
         capsEnabled = _enabled;
     }

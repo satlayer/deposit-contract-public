@@ -16,7 +16,7 @@ interface ISatlayerPool {
     error TokenAlreadyAdded(); //Thrown if the token has already been added (and receipt token created)
     error TokenNotAdded(); //Thrown if queried token has not been added to the Satlayer Pool
     error TokenAlreadyConfiguredWithState(); //Thrown if the token as already been enabled or disabled 
-    error ParamsUnchanged(); // Thrown if no-op call to setTokenStakingParams()
+    error ParamsUnchanged(); // Thrown if trying to change a setting to the same value
     error DepositAmountCannotBeZero(); // Thrown if staker attempts to call deposit() with zero amount
     error WithdrawAmountCannotBeZero(); //Thrown if staker attempts to call withdraw() with zero amount
     error TokenNotAllowedForStaking(); // Thrown if staker attempts to stake unsupported token (or token disabled for staking)
