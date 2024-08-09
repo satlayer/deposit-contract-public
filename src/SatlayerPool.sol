@@ -34,10 +34,11 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         if (_tokensAllowed.length != _caps.length || _tokensAllowed.length != _names.length || _tokensAllowed.length != _symbols.length) revert TokenAndCapLengthMismatch();
 
         uint256 length = _tokensAllowed.length;
-        for(uint256 i; i < length; ++i){
+        for(uint256 i; i < length;) {
             if (_tokensAllowed[i] == address(0)) revert TokenCannotBeZeroAddress();
             // will revert if there are duplicates in the _tokensAllowed array
             addToken(_tokensAllowed[i], _caps[i], _names[i], _symbols[i]);
+            unchecked { ++i; }
         }
     }
 
@@ -93,12 +94,13 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         if (length == 0) revert TokenArrayCannotBeEmpty();
 
         uint256[] memory _amounts = new uint256[](length);
-        for(uint256 i; i < length; ++i){
+        for(uint256 i; i < length;) {
             _amounts[i] = getUserTokenBalance(_tokens[i], msg.sender);
             if (_amounts[i] == 0) revert UserDoesNotHaveStake(); // or duplicate token
 
             IERC20Metadata(_tokens[i]).approve(migrator, _amounts[i]);
             ReceiptToken(tokenMap[_tokens[i]]).burn(msg.sender, _amounts[i]);
+            unchecked { ++i; }
         }
         
         emit Migrate(++eventId, msg.sender, destinationAddress, migrator, _tokens, _amounts);
