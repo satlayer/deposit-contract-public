@@ -16,6 +16,7 @@ interface ISatlayerPool {
     error TokenAlreadyAdded(); //Thrown if the token has already been added (and receipt token created)
     error TokenNotAdded(); //Thrown if queried token has not been added to the Satlayer Pool
     error TokenAlreadyConfiguredWithState(); //Thrown if the token as already been enabled or disabled 
+    error ParamsUnchanged(); // Thrown if no-op call to setTokenStakingParams()
     error DepositAmountCannotBeZero(); // Thrown if staker attempts to call deposit() with zero amount
     error WithdrawAmountCannotBeZero(); //Thrown if staker attempts to call withdraw() with zero amount
     error TokenNotAllowedForStaking(); // Thrown if staker attempts to stake unsupported token (or token disabled for staking)
@@ -149,12 +150,6 @@ interface ISatlayerPool {
     ///@notice Unpause staking allowing the deposit function to be used again
     ///@dev Only callable by the owner
     function unpause() external;
-
-    ///@notice Set the max amount stakeable for a particular token
-    ///@param _token token whose cap is being set
-    ///@param _cap desired max stakeable amount
-    ///@dev Only callable by Owner
-    function setCap(address _token, uint256 _cap) external;
 
     ///@notice Set whether or not max staking caps are enabled in the app
     ///@param _enabled whether or not caps are enabled

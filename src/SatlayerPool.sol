@@ -116,14 +116,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
     /**
      * @inheritdoc ISatlayerPool
      */
-    function setCap(address _token, uint256 _cap) external onlyOwner {
-        emit CapChanged(_token, _cap);
-        caps[_token] = _cap;
-    }
-
-    /**
-     * @inheritdoc ISatlayerPool
-     */
     function setCapsEnabled(bool _enabled) external onlyOwner {
         emit CapsEnabled(_enabled);
         capsEnabled = _enabled;
@@ -157,13 +149,23 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
      */
     function setTokenStakingParams(address _token, bool _canStake, uint256 _cap) public onlyOwner {
         if (_token == address(0)) revert TokenCannotBeZeroAddress();
-        if (tokenAllowlist[_token] == _canStake) revert TokenAlreadyConfiguredWithState();
-
-        tokenAllowlist[_token] = _canStake;
-
-        caps[_token] = _cap;
         
-        emit TokenStakabilityChanged(_token, _canStake);
+        if (tokenMap[_token] == address(0)) revert TokenNotAdded();
+
+        bool stakingChanged = tokenAllowlist[_token] != _canStake;
+        bool capChanged = caps[_token] != _cap;
+
+        if (!stakingChanged && !capChanged) revert ParamsUnchanged();
+
+        if (stakingChanged) {
+            tokenAllowlist[_token] = _canStake;
+            emit TokenStakabilityChanged(_token, _canStake);
+        }
+
+        if (capChanged) {
+            caps[_token] = _cap;
+            emit CapChanged(_token, _cap);
+        }
     }
 
     /**
