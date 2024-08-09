@@ -41,6 +41,7 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         }
     }
 
+
     /*//////////////////////////////////////////////////////////////
                             Staker Functions
     //////////////////////////////////////////////////////////////*/
@@ -54,14 +55,15 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         if (!tokenAllowlist[_token]) revert TokenNotAllowedForStaking();
         if (capsEnabled && caps[_token] < getTokenTotalStaked(_token) + _amount) revert CapReached();
         
-        emit Deposit(++eventId, _for, _token, _amount);
+        uint256 balanceBefore = IERC20Metadata(_token).balanceOf(address(this));
+        IERC20Metadata(_token).safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 actualAmount = IERC20Metadata(_token).balanceOf(address(this)) - balanceBefore;
 
-        ReceiptToken(tokenMap[_token]).mint(_for, _amount);
-        IERC20Metadata(_token).safeTransferFrom(msg.sender, address(this), _amount);   
+        emit Deposit(++eventId, _for, _token, actualAmount);
+
+        ReceiptToken(tokenMap[_token]).mint(_for, actualAmount);
     }
 
-
-     
     /**
      * @inheritdoc ISatlayerPool
      */
@@ -117,7 +119,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
                             Admin Functions
     //////////////////////////////////////////////////////////////*/
 
-
     /**
      * @inheritdoc ISatlayerPool
      */
@@ -125,7 +126,6 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         emit CapChanged(_token, _cap);
         caps[_token] = _cap;
     }
-
 
     /**
      * @inheritdoc ISatlayerPool
