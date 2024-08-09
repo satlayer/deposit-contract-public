@@ -24,7 +24,6 @@ interface ISatlayerPool {
     error MigratorNotSet(); //Thrown if the migrator contract is not set
     error CannotDepositForZeroAddress(); //Thrown if caller tries to deposit on behalf of the zero address
     error CannotRenounceOwnership(); //Thrown if the renounceOwnership() function is called
-    error DuplicateToken(); //Thrown when there is a duplicate in the provided token address array
     error TokenArrayCannotBeEmpty(); //Thrown when the provided token address array is empty
     error CapReached(); //Thrown when the cap for a token has been reached
     error InsufficientUserBalance(); //Thrown when the user does not have enough token balance to withdraw desired amount

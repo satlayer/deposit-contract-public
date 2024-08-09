@@ -95,18 +95,10 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         uint256[] memory _amounts = new uint256[](length);
         for(uint256 i; i < length; ++i){
             _amounts[i] = getUserTokenBalance(_tokens[i], msg.sender);
-            if (_amounts[i] == 0) revert UserDoesNotHaveStake();
-        }
-
-        // loop through array again and approve migrator, burn receipt token
-        for(uint256 i; i < length; ++i){
-
-            //if the receipt token balance is already set to zero, then token is a duplicate previous token in the array
-            if (getUserTokenBalance(_tokens[i], msg.sender) == 0) revert DuplicateToken();
+            if (_amounts[i] == 0) revert UserDoesNotHaveStake(); // or duplicate token
 
             IERC20Metadata(_tokens[i]).approve(migrator, _amounts[i]);
             ReceiptToken(tokenMap[_tokens[i]]).burn(msg.sender, _amounts[i]);
-
         }
         
         emit Migrate(++eventId, msg.sender, destinationAddress, migrator, _tokens, _amounts);
