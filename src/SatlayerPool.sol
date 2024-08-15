@@ -183,6 +183,9 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
         _unpause();
     }
 
+    /**
+     * @inheritdoc ISatlayerPool
+     */
     function recoverERC20(address tokenAddress, address tokenReceiver, uint256 tokenAmount) external onlyOwner {
         if (tokenMap[tokenAddress] != address(0)) revert TokenAlreadyAdded();
 
