@@ -219,5 +219,4 @@ contract SatlayerPool is ISatlayerPool, Ownable, Pausable {
 
         return ReceiptToken(tokenMap[_token]).totalSupply();
     }
-
 }
