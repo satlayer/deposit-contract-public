@@ -13,11 +13,6 @@
         "internalType": "uint256[]"
       },
       {
-        "name": "_individualCaps",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
         "name": "_names",
         "type": "string[]",
         "internalType": "string[]"
@@ -45,11 +40,6 @@
         "internalType": "uint256"
       },
       {
-        "name": "_individualCap",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "_name",
         "type": "string",
         "internalType": "string"
@@ -58,48 +48,6 @@
         "name": "_symbol",
         "type": "string",
         "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "balance",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "blockMigrator",
-    "inputs": [
-      {
-        "name": "_migrator",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_blocklisted",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "outputs": [],
@@ -162,49 +110,6 @@
   },
   {
     "type": "function",
-    "name": "eip712Domain",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "fields",
-        "type": "bytes1",
-        "internalType": "bytes1"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "version",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "verifyingContract",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "salt",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "extensions",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "getTokenTotalStaked",
     "inputs": [
       {
@@ -248,38 +153,6 @@
   },
   {
     "type": "function",
-    "name": "individualCaps",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "individualCapsEnabled",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "migrate",
     "inputs": [
       {
@@ -288,24 +161,9 @@
         "internalType": "address[]"
       },
       {
-        "name": "_migratorContract",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_destination",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_signatureExpiry",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_authorizationSignatureFromSatlayer",
-        "type": "bytes",
-        "internalType": "bytes"
+        "name": "destinationAddress",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -313,76 +171,13 @@
   },
   {
     "type": "function",
-    "name": "migrateWithSig",
-    "inputs": [
-      {
-        "name": "_user",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_tokens",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "_migratorContract",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_destination",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_signatureExpiry",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_stakerSignature",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "migratorBlocklist",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "name": "migrator",
+    "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "nonces",
-    "inputs": [
-      {
-        "name": "owner",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -422,45 +217,31 @@
   },
   {
     "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
+    "name": "recoverERC20",
+    "inputs": [
+      {
+        "name": "tokenAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenReceiver",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "reverseTokenMap",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "setCap",
-    "inputs": [
-      {
-        "name": "_token",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_cap",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "renounceOwnership",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -479,41 +260,10 @@
   },
   {
     "type": "function",
-    "name": "setIndividualCap",
+    "name": "setMigrator",
     "inputs": [
       {
-        "name": "_token",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_individualCap",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setIndividualCapsEnabled",
-    "inputs": [
-      {
-        "name": "_enabled",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setSatlayerSigner",
-    "inputs": [
-      {
-        "name": "_signer",
+        "name": "_migrator",
         "type": "address",
         "internalType": "address"
       }
@@ -537,11 +287,6 @@
       },
       {
         "name": "_cap",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_individualCap",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -583,25 +328,6 @@
         "name": "",
         "type": "address",
         "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "totalAmounts",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -665,6 +391,38 @@
   },
   {
     "type": "event",
+    "name": "CapChanged",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "cap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CapsEnabled",
+    "inputs": [
+      {
+        "name": "enabled",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Deposit",
     "inputs": [
       {
@@ -696,12 +454,6 @@
   },
   {
     "type": "event",
-    "name": "EIP712DomainChanged",
-    "inputs": [],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Migrate",
     "inputs": [
       {
@@ -717,16 +469,10 @@
         "internalType": "address"
       },
       {
-        "name": "tokens",
-        "type": "address[]",
+        "name": "destinationAddress",
+        "type": "string",
         "indexed": false,
-        "internalType": "address[]"
-      },
-      {
-        "name": "destination",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
+        "internalType": "string"
       },
       {
         "name": "migrator",
@@ -735,10 +481,29 @@
         "internalType": "address"
       },
       {
+        "name": "tokens",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
         "name": "amounts",
         "type": "uint256[]",
         "indexed": false,
         "internalType": "uint256[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MigratorChanged",
+    "inputs": [
+      {
+        "name": "migrator",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -768,19 +533,6 @@
     "inputs": [
       {
         "name": "account",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "SignerChanged",
-    "inputs": [
-      {
-        "name": "newSigner",
         "type": "address",
         "indexed": false,
         "internalType": "address"
@@ -895,11 +647,6 @@
   },
   {
     "type": "error",
-    "name": "DuplicateToken",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "EnforcedPause",
     "inputs": []
   },
@@ -915,48 +662,17 @@
   },
   {
     "type": "error",
-    "name": "IndividualCapReached",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InsufficientUserBalance",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidAccountNonce",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "currentNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "InvalidShortString",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "MigratorAlreadyAllowedOrBlocked",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "MigratorBlocked",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "MigratorCannotBeZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MigratorNotSet",
     "inputs": []
   },
   {
@@ -983,43 +699,17 @@
   },
   {
     "type": "error",
+    "name": "ParamsUnchanged",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "SafeERC20FailedOperation",
     "inputs": [
       {
         "name": "token",
         "type": "address",
         "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "SignatureExpired",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "SignatureInvalid",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "SignerAlreadySetToAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "SignerCannotBeZeroAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "StringTooLong",
-    "inputs": [
-      {
-        "name": "str",
-        "type": "string",
-        "internalType": "string"
       }
     ]
   },
@@ -1046,6 +736,11 @@
   {
     "type": "error",
     "name": "TokenCannotBeZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TokenNotAdded",
     "inputs": []
   },
   {

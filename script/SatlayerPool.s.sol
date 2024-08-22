@@ -8,32 +8,38 @@ contract DeploySatlayerPoolSepolia is Script {
     function setUp() public {}
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        uint256 DECIMALS = 10**18;
 
-        vm.startBroadcast(deployerPrivateKey);
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 DECIMALS = 10**8;
+
+        //vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         // can grab testnet tokens to play around with app here:
         // https://stg.secured.finance/faucet/
-        address[] memory tokensAllowed = new address[](3);
-        tokensAllowed[0] = 0xF31B086459C2cdaC006Feedd9080223964a9cDdB; // "USDC"
-        tokensAllowed[1] = 0xB2a6874c2F71fD4481674BaC945D5407A2318b3E; // "WBTC"
-        tokensAllowed[2] = 0x50AeD9269cc4D459567Cf9de2D08984229b8754F; // "WFIL"
+        address[] memory tokensAllowed = new address[](4);
+        tokensAllowed[0] = 0xC96dE26018A54D51c097160568752c4E3BD6C364; // FBTC
+        tokensAllowed[1] = 0x8236a87084f8B84306f72007F36F2618A5634494; // LBTC
+        tokensAllowed[2] = 0xd9D920AA40f578ab794426F5C90F6C731D159DEf; // solvBTC.BBN
+        tokensAllowed[3] = 0xF469fBD2abcd6B9de8E169d128226C0Fc90a012e; // pumpBTC
 
-        uint256[] memory caps = new uint256[](3);
-        caps[0] = 100000 * DECIMALS;
-        caps[1] = 200 * DECIMALS;
-        caps[2] = 4200 * DECIMALS;
+        uint256[] memory caps = new uint256[](4); // set all caps initially to 1 BTC
+        caps[0] = DECIMALS;
+        caps[1] = DECIMALS;
+        caps[2] = 10**18; // solvBTC.BBN has a decimel precision of 18
+        caps[3] = DECIMALS;
 
-        string[] memory names = new string[](3);
-        names[0] = "SatLayer USDC";
-        names[1] = "Satlayer WBTC";
-        names[2] = "Satlayer WFIL";
+        string[] memory names = new string[](4);
+        names[0] = "SatLayer FBTC";
+        names[1] = "Satlayer LBTC";
+        names[2] = "Satlayer SolvBTC.BBN";
+        names[3] = "Satlayer pumpBTC";
 
-        string[] memory symbols = new string[](3);
-        symbols[0] = "satUSDC";
-        symbols[1] = "satWBTC";
-        symbols[2] = "satWFIL";      
+        string[] memory symbols = new string[](4);
+        symbols[0] = "satFBTC";
+        symbols[1] = "satLBTC";
+        symbols[2] = "satSolvBTC";      
+        symbols[3] = "satPumpBTC";  
 
         SatlayerPool pool = new SatlayerPool(tokensAllowed, caps, names, symbols);
         
